@@ -3,6 +3,8 @@ import axios from "axios";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const information = await req.json();
+  console.log(information);
+  const { birthDate, birthTime, birthPlace } = information;
   const data = JSON.stringify({
     messages: [
       {
@@ -27,9 +29,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         role: "system",
       },
       {
-        content: `Hi, I',m a software engineer, this is my information:
-        ${JSON.stringify(information)}
-        `,
+        content: `Hello, my birthday is on ${birthDate}, at ${birthTime}. I was born in ${birthPlace}.`,
         role: "user",
       },
     ],
@@ -65,12 +65,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   return axios(config)
     .then((response) => {
-      return new NextResponse(JSON.stringify(response.data), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      return new NextResponse(
+        JSON.stringify(response.data.choices[0].message.content),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
     })
     .catch((error) => {
       return new NextResponse(error, {
