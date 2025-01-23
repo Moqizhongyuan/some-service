@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const information = await req.json();
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       type: "json_object",
     },
     stop: null,
-    stream: false,
+    stream: true,
     stream_options: null,
     temperature: 1.5,
     top_p: 1,
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     top_logprobs: null,
   });
 
-  const config = {
+  const config: AxiosRequestConfig<string> = {
     method: "post",
     maxBodyLength: Infinity,
     url: "https://api.deepseek.com/chat/completions",
@@ -61,22 +61,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       Authorization: `Bearer ${process.env.API_KEY}`,
     },
     data: data,
+    responseType: "stream",
   };
 
   return axios(config)
     .then((response) => {
-      return new NextResponse(
-        JSON.stringify(response.data.choices[0].message.content),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // const content =
+      //   response.data === "[DONE]"
+      //     ? ""
+      //     : response.data.choices[0].delta.content;
+      const content = response.data;
+      return new NextResponse(content, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Transfer-Encoding": "chunked",
+        },
+      });
     })
     .catch((error) => {
-      return new NextResponse(error, {
+      return new NextResponse("end:" + error, {
         status: 500,
       });
     });
