@@ -66,16 +66,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   return axios(config)
     .then((response) => {
-      // const content =
-      //   response.data === "[DONE]"
-      //     ? ""
-      //     : response.data.choices[0].delta.content;
       const content = response.data;
       return new NextResponse(content, {
         status: 200,
         headers: {
           "Content-Type": "application/json",
           "Transfer-Encoding": "chunked",
+          "Access-Control-Allow-Origin": "*",
         },
       });
     })
