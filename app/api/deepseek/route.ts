@@ -58,7 +58,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${process.env.API_KEY}`,
+      Authorization: "Bearer sk-79511f013c6f4e29b485fae970338bf7",
     },
     data: data,
     responseType: "stream",
