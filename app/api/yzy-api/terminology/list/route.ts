@@ -24,3 +24,33 @@ export async function GET(req: NextRequest): Promise<Response> {
     });
   }
 }
+import { NextResponse } from "next/server";
+
+export async function POST(): Promise<Response> {
+  console.log("terminology create");
+  return NextResponse.json({
+    code: 0,
+    message: "",
+    result: {
+      page: 2,
+      limit: 10,
+      data: [
+        {
+          terminology_id: "efe5646c-0eff-46ca-922f-9e9d98e06624",
+          terminology_name: "cc",
+          terminology_num: 6,
+          created_time: 1742295327,
+          update_time: 1742295327,
+        },
+        {
+          terminology_id: "5f0231be-9bb5-4178-b974-77f0255dcb66",
+          terminology_name: "dev-0212",
+          terminology_num: 0,
+          created_time: 1742295327,
+          update_time: 1742295327,
+        },
+      ],
+      total: 82,
+    },
+  });
+}
