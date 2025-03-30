@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server";
 
 export async function POST(): Promise<Response> {
+  const data = [];
+  for (let i = 0; i < 100; i++) {
+    data.push(
+      {
+        terminology_id: "efe5646c-0eff-46ca-922f-9e9d98e06624",
+        terminology_name: "cc",
+        terminology_num: 6,
+        created_time: 1742295327,
+        update_time: 1742295327,
+      },
+      {
+        terminology_id: "5f0231be-9bb5-4178-b974-77f0255dcb66",
+        terminology_name: "dev-0212",
+        terminology_num: 0,
+        created_time: 1742295327,
+        update_time: 1742295327,
+      }
+    );
+  }
   console.log("terminology create");
   return new NextResponse(
     JSON.stringify({
@@ -9,22 +28,7 @@ export async function POST(): Promise<Response> {
       result: {
         page: 2,
         limit: 10,
-        data: [
-          {
-            terminology_id: "efe5646c-0eff-46ca-922f-9e9d98e06624",
-            terminology_name: "cc",
-            terminology_num: 6,
-            created_time: 1742295327,
-            update_time: 1742295327,
-          },
-          {
-            terminology_id: "5f0231be-9bb5-4178-b974-77f0255dcb66",
-            terminology_name: "dev-0212",
-            terminology_num: 0,
-            created_time: 1742295327,
-            update_time: 1742295327,
-          },
-        ],
+        data,
         total: 82,
       },
     }),
