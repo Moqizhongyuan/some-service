@@ -4,7 +4,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const json = await req.json();
   // const text = await req.text();
   const { page, limit } = json;
-  console.log("terminology create", json);
+  console.log("terminology create", json, page, limit);
   const data = [];
   for (let i = 0; i < 100; i++) {
     data.push(
