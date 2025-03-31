@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const json = await req.json();
-  const text = await req.text();
+  // const text = await req.text();
   const { page, limit } = json;
-  console.log("terminology create", json, text);
+  console.log("terminology create", json);
   const data = [];
   for (let i = 0; i < 100; i++) {
     data.push(
