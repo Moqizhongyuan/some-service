@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(): Promise<Response> {
+export async function POST(req: NextRequest): Promise<Response> {
+  const { limit, page } = await req.json();
   const data = [];
   for (let i = 0; i < 100; i++) {
     data.push(
@@ -26,8 +27,8 @@ export async function POST(): Promise<Response> {
       code: 0,
       message: "",
       result: {
-        page: 2,
-        limit: 10,
+        page,
+        limit,
         data,
         total: 82,
       },

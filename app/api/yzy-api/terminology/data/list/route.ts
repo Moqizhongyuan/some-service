@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(): Promise<Response> {
+export async function POST(req: NextRequest): Promise<Response> {
+  const { page, limit } = await req.json();
   console.log("terminology create");
   return new NextResponse(
     JSON.stringify({
       code: 0,
       message: "",
       result: {
-        page: 2,
-        limit: 10,
+        page,
+        limit,
         data: [
           {
             terminology_id: "efe5646c-0eff-46ca-922f-9e9d98e06624",
