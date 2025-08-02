@@ -14,6 +14,138 @@ interface RateLimitEntry {
   firstRequest: number;
 }
 
+interface IpInfo {
+  ip: string;
+  type: string;
+  hostname: string | null;
+  carrier: {
+    name: string | null;
+    mcc: string | null;
+    mnc: string | null;
+  };
+  company: {
+    domain: string;
+    name: string;
+    type: string;
+  };
+  connection: {
+    asn: number;
+    domain: string;
+    organization: string;
+    route: string;
+    type: string;
+  };
+  currency: {
+    code: string;
+    name: string;
+    name_native: string;
+    plural: string;
+    plural_native: string;
+    symbol: string;
+    symbol_native: string;
+    format: {
+      decimal_separator: string;
+      group_separator: string;
+      negative: {
+        prefix: string;
+        suffix: string;
+      };
+      positive: {
+        prefix: string;
+        suffix: string;
+      };
+    };
+  };
+  location: {
+    continent: {
+      code: string;
+      name: string;
+    };
+    country: {
+      area: number;
+      borders: string[];
+      calling_code: string;
+      capital: string;
+      code: string;
+      name: string;
+      population: number;
+      population_density: number;
+      flag: {
+        emoji: string;
+        emoji_unicode: string;
+        emojitwo: string;
+        noto: string;
+        twemoji: string;
+        wikimedia: string;
+      };
+      languages: {
+        code: string;
+        name: string;
+        native: string;
+      }[];
+      tld: string;
+    };
+    region: {
+      code: string;
+      name: string;
+    };
+    city: string;
+    postal: string;
+    latitude: number;
+    longitude: number;
+    language: {
+      code: string;
+      name: string;
+      native: string;
+    };
+    in_eu: boolean;
+  };
+  security: {
+    is_abuser: boolean;
+    is_attacker: boolean;
+    is_bogon: boolean;
+    is_cloud_provider: boolean;
+    is_proxy: boolean;
+    is_relay: boolean;
+    is_tor: boolean;
+    is_tor_exit: boolean;
+    is_vpn: boolean;
+    is_anonymous: boolean;
+    is_threat: boolean;
+  };
+  time_zone: {
+    id: string;
+    abbreviation: string;
+    current_time: string;
+    name: string;
+    offset: number;
+    in_daylight_saving: boolean;
+  };
+  user_agent: {
+    header: string;
+    name: string;
+    type: string;
+    version: string;
+    version_major: string;
+    device: {
+      brand: string;
+      name: string;
+      type: string;
+    };
+    engine: {
+      name: string;
+      type: string;
+      version: string;
+      version_major: string;
+    };
+    os: {
+      name: string;
+      type: string;
+      version: string | null;
+    };
+  };
+}
+
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 // 频次限制配置
@@ -166,33 +298,35 @@ async function getGeoLocationInfo(ip: string): Promise<GeoLocationInfo | null> {
     console.log(`🌍 [GEO CHECK] 获取IP地理位置信息: ${ip}`);
 
     // 使用免费的IP地理位置API
-    const response = await fetch(`https://ipapi.co/${ip}/json/`, {
-      headers: {
-        "User-Agent": "ipcheck-api/1.0",
-      },
-    });
+    const response = await fetch(
+      `https://api.ipregistry.co/${ip}?key=ira_uKsQtXWBhLJpIuEkDsxMvUKSnY1kHr1ay8lj`
+    );
 
     if (!response.ok) {
       console.error("❌ [GEO CHECK] IP地理位置API请求失败");
       return null;
     }
 
-    const data = await response.json();
+    const data: IpInfo = await response.json();
     console.log("📍 [GEO CHECK] IP地理位置信息:", data);
 
     return {
-      country: data.country_name || "Unknown",
-      countryCode: data.country_code || "Unknown",
-      region: data.region || "Unknown",
-      regionCode: data.region_code || "Unknown",
-      city: data.city || "Unknown",
-      timezone: data.timezone || "Unknown",
-      isp: data.org || "Unknown",
-      org: data.org || "Unknown",
-      as: data.asn || "Unknown",
-      proxy: data.proxy || false,
-      hosting: data.hosting || false,
-      mobile: data.mobile || false,
+      country: data.location.country.name || "Unknown",
+      countryCode: data.location.country.code || "Unknown",
+      region: data.location.region.name || "Unknown",
+      regionCode: data.location.region.code || "Unknown",
+      city: data.location.city || "Unknown",
+      timezone: data.time_zone.id || "Unknown",
+      isp: data.connection.organization || "Unknown",
+      org: data.connection.organization || "Unknown",
+      as: data.connection.asn.toString() || "Unknown",
+      proxy:
+        data.security.is_proxy ||
+        data.security.is_vpn ||
+        data.security.is_tor ||
+        false,
+      hosting: data.security.is_cloud_provider || false,
+      mobile: data.carrier.name !== null, // 如果有运营商信息，说明是移动网络
     };
   } catch (error) {
     console.error("❌ [GEO CHECK] 获取IP地理位置信息时出错:", error);
@@ -263,6 +397,11 @@ function analyzeIPPool(ip: string, geoInfo: GeoLocationInfo): IPPoolFeatures {
     riskScore += 40; // Tor网络
   }
 
+  // 检查是否为Tor网络（从安全信息中获取）
+  if (geoInfo.proxy && (as.includes("tor") || as.includes("exit"))) {
+    riskScore += 40; // Tor网络额外风险
+  }
+
   // 判断是否为动态IP池
   const isDynamic = riskScore > 30;
 
@@ -272,7 +411,7 @@ function analyzeIPPool(ip: string, geoInfo: GeoLocationInfo): IPPoolFeatures {
     isVPN: vpnProviders.some(
       (provider) => isp.includes(provider) || org.includes(provider)
     ),
-    isTor: as.includes("tor") || as.includes("exit"),
+    isTor: as.includes("tor") || as.includes("exit") || geoInfo.proxy,
     isHosting: geoInfo.hosting,
     isMobile: geoInfo.mobile,
     riskScore: Math.min(riskScore, 100),
